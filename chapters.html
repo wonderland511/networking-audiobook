@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Нетворкинг для разведчиков — главы</title>
+<style>
+  :root{
+    --bg:#0b0b0c;
+    --surface:#151517;
+    --surface-2:#1c1c1f;
+    --line:#2a2a2e;
+    --text:#f4f4f5;
+    --text-dim:#9a9aa2;
+    --accent:#e8b23a;
+    --accent-ink:#1a1200;
+    --accent-soft:rgba(232,178,58,.14);
+    --radius:18px;
+    --maxw:820px;
+    --bar-h:96px;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#f6f6f4;
+      --surface:#ffffff;
+      --surface-2:#f0f0ee;
+      --line:#e3e3e0;
+      --text:#1a1a1a;
+      --text-dim:#6b6b70;
+      --accent:#b9801a;
+      --accent-ink:#fff;
+      --accent-soft:rgba(185,128,26,.12);
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:0 20px calc(var(--bar-h) + 40px);
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto}
+  header{padding:52px 0 24px;text-align:center}
+  .kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--text-dim);margin:0 0 14px;font-weight:600}
+  h1{font-size:clamp(26px,6vw,40px);line-height:1.12;margin:0 0 10px;font-weight:700;letter-spacing:-.02em}
+  .sub{color:var(--text-dim);margin:0;font-size:15px}
+  .meta-row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:16px;color:var(--text-dim);font-size:13px}
+  .meta-row b{color:var(--text);font-weight:600}
+  .nav-alt{margin-top:14px;font-size:13px}
+  .nav-alt a{color:var(--text-dim);text-decoration:none;border-bottom:1px solid var(--line)}
+  .nav-alt a:hover{color:var(--text)}
+
+  .grid{display:grid;grid-template-columns:1fr;gap:14px;margin:28px 0 0}
+  @media (min-width:620px){ .grid{grid-template-columns:1fr 1fr} }
+
+  button.chap{
+    display:flex;align-items:center;gap:16px;width:100%;text-align:left;
+    background:var(--surface);color:var(--text);
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px 18px;cursor:pointer;font:inherit;
+    min-height:84px;-webkit-tap-highlight-color:transparent;
+    transition:transform .12s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease;
+  }
+  button.chap:hover{border-color:var(--accent);transform:translateY(-2px)}
+  button.chap:active{transform:translateY(0) scale(.99)}
+  button.chap:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  button.chap.active{
+    border-color:var(--accent);
+    background:linear-gradient(var(--accent-soft),var(--accent-soft)),var(--surface);
+    box-shadow:0 0 0 1px var(--accent) inset;
+  }
+  .badge{
+    flex:0 0 auto;width:52px;height:52px;border-radius:14px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--surface-2);color:var(--accent);
+    font-weight:700;font-size:18px;font-variant-numeric:tabular-nums;
+  }
+  button.chap.active .badge{background:var(--accent);color:var(--accent-ink)}
+  button.chap.active.is-playing .badge::after{content:"";width:0;height:0;border-style:solid;border-width:8px 0 8px 13px;border-color:transparent transparent transparent currentColor;margin-left:3px}
+  button.chap.active.is-playing .badge{font-size:0}
+  .c-main{min-width:0;flex:1}
+  .c-title{font-weight:600;font-size:16px;line-height:1.3;display:block}
+  .c-meta{color:var(--text-dim);font-size:13px;margin-top:3px;display:block}
+  .c-go{
+    flex:0 0 auto;color:var(--text-dim);font-size:13px;font-weight:600;
+    border:1px solid var(--line);border-radius:999px;padding:7px 14px;white-space:nowrap;
+  }
+  button.chap.active .c-go{border-color:var(--accent);color:var(--accent)}
+
+  /* Нижний плеер */
+  .player{
+    position:fixed;left:0;right:0;bottom:0;z-index:20;
+    background:var(--surface);border-top:1px solid var(--line);
+    padding:12px 20px calc(12px + env(safe-area-inset-bottom));
+    backdrop-filter:saturate(1.2) blur(8px);
+  }
+  .player-inner{max-width:var(--maxw);margin:0 auto;display:flex;flex-direction:column;gap:8px}
+  .player-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .now{font-weight:600;font-size:14px;flex:1;min-width:180px}
+  .now span{color:var(--text-dim);font-weight:400}
+  .pbtn{
+    border:1px solid var(--line);background:var(--surface-2);color:var(--text);
+    font:inherit;font-size:13px;border-radius:999px;padding:8px 14px;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .pbtn:hover{border-color:var(--accent)}
+  .pbtn:disabled{opacity:.4;cursor:default}
+  .seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px}
+  .seg button{border:0;background:transparent;color:var(--text-dim);font:inherit;font-size:12.5px;padding:6px 10px;border-radius:999px;cursor:pointer}
+  .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+  audio{width:100%;height:40px;display:block}
+
+  footer{margin-top:36px;text-align:center;color:var(--text-dim);font-size:12.5px;line-height:1.7}
+
+  @media (prefers-reduced-motion: no-preference){
+    .js .reveal{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease}
+    .js .reveal.in{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add('js');</script>
+<div class="wrap">
+  <header class="reveal">
+    <p class="kicker">Аудиокнига · главы</p>
+    <h1>Нетворкинг для разведчиков</h1>
+    <p class="sub">Нажмите на главу — она откроется в плеере внизу и начнёт играть</p>
+    <div class="meta-row">
+      <span><b>Разделов:</b> 10</span>
+      <span><b>Длительность:</b> ~4 ч 40 мин</span>
+      <span><b>MP3:</b> 128 kbps</span>
+    </div>
+    <p class="nav-alt"><a href="index.html">Открыть обычный список с отдельными плеерами →</a></p>
+  </header>
+
+  <div class="grid reveal" id="grid"><!-- кнопки глав генерируются скриптом --></div>
+
+  <noscript>
+    <div class="grid">
+      <a class="chap" href="audio/00.mp3"><span class="badge">00</span><span class="c-main"><span class="c-title">Предисловие и введение</span><span class="c-meta">10:56</span></span></a>
+      <a class="chap" href="audio/01.mp3"><span class="badge">01</span><span class="c-main"><span class="c-title">Глава 1. Инструменты нетворкинга</span><span class="c-meta">25:27</span></span></a>
+      <a class="chap" href="audio/02.mp3"><span class="badge">02</span><span class="c-main"><span class="c-title">Глава 2. Стратегия нетворкинга</span><span class="c-meta">26:33</span></span></a>
+      <a class="chap" href="audio/03.mp3"><span class="badge">03</span><span class="c-main"><span class="c-title">Глава 3. Первый контакт</span><span class="c-meta">50:19</span></span></a>
+      <a class="chap" href="audio/04.mp3"><span class="badge">04</span><span class="c-main"><span class="c-title">Глава 4. Развитие отношений</span><span class="c-meta">35:40</span></span></a>
+      <a class="chap" href="audio/05.mp3"><span class="badge">05</span><span class="c-main"><span class="c-title">Глава 5. Методы укрепления взаимоотношений</span><span class="c-meta">27:52</span></span></a>
+      <a class="chap" href="audio/06.mp3"><span class="badge">06</span><span class="c-main"><span class="c-title">Глава 6. «Внедрение» в организации</span><span class="c-meta">31:22</span></span></a>
+      <a class="chap" href="audio/07.mp3"><span class="badge">07</span><span class="c-main"><span class="c-title">Глава 7. Вверх по социальной лестнице</span><span class="c-meta">24:59</span></span></a>
+      <a class="chap" href="audio/08.mp3"><span class="badge">08</span><span class="c-main"><span class="c-title">Глава 8. Запуск операции «Нетворк»</span><span class="c-meta">21:52</span></span></a>
+      <a class="chap" href="audio/09.mp3"><span class="badge">09</span><span class="c-main"><span class="c-title">Заключение</span><span class="c-meta">05:14</span></span></a>
+    </div>
+  </noscript>
+
+  <footer class="reveal">
+    <p>Позиция прослушивания и скорость сохраняются в этом браузере.</p>
+    <p>Личная копия для прослушивания. Все права на содержание принадлежат правообладателям аудиокниги.</p>
+  </footer>
+</div>
+
+<div class="player" id="player" hidden>
+  <div class="player-inner">
+    <div class="player-row">
+      <div class="now" id="now">Выберите главу</div>
+      <button class="pbtn" id="prev" type="button" disabled>◀ Пред.</button>
+      <button class="pbtn" id="next" type="button" disabled>След. ▶</button>
+      <div class="seg" id="speed" aria-label="Скорость воспроизведения">
+        <button data-rate="1" aria-pressed="true" type="button">1×</button>
+        <button data-rate="1.25" aria-pressed="false" type="button">1.25×</button>
+        <button data-rate="1.5" aria-pressed="false" type="button">1.5×</button>
+        <button data-rate="1.75" aria-pressed="false" type="button">1.75×</button>
+        <button data-rate="2" aria-pressed="false" type="button">2×</button>
+      </div>
+    </div>
+    <audio id="audio" controls preload="none"></audio>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var TRACKS = [
+    {n:"00", file:"audio/00.mp3", dur:"10:56", title:"Предисловие и введение"},
+    {n:"01", file:"audio/01.mp3", dur:"25:27", title:"Глава 1. Инструменты нетворкинга"},
+    {n:"02", file:"audio/02.mp3", dur:"26:33", title:"Глава 2. Стратегия нетворкинга"},
+    {n:"03", file:"audio/03.mp3", dur:"50:19", title:"Глава 3. Первый контакт"},
+    {n:"04", file:"audio/04.mp3", dur:"35:40", title:"Глава 4. Развитие отношений"},
+    {n:"05", file:"audio/05.mp3", dur:"27:52", title:"Глава 5. Методы укрепления взаимоотношений"},
+    {n:"06", file:"audio/06.mp3", dur:"31:22", title:"Глава 6. «Внедрение» в организации"},
+    {n:"07", file:"audio/07.mp3", dur:"24:59", title:"Глава 7. Вверх по социальной лестнице"},
+    {n:"08", file:"audio/08.mp3", dur:"21:52", title:"Глава 8. Запуск операции «Нетворк»"},
+    {n:"09", file:"audio/09.mp3", dur:"05:14", title:"Заключение"}
+  ];
+
+  var LS = {
+    get:function(k){try{return localStorage.getItem(k);}catch(e){return null;}},
+    set:function(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  };
+
+  var grid   = document.getElementById("grid");
+  var player = document.getElementById("player");
+  var audio  = document.getElementById("audio");
+  var nowEl  = document.getElementById("now");
+  var prevBtn= document.getElementById("prev");
+  var nextBtn= document.getElementById("next");
+  var seg    = document.getElementById("speed");
+
+  var buttons = [];
+  var current = -1;
+  var restoring = false;
+
+  TRACKS.forEach(function(t, i){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "chap reveal";
+    b.setAttribute("aria-label", "Играть: " + t.title);
+    b.innerHTML =
+      '<span class="badge">' + t.n + '</span>' +
+      '<span class="c-main">' +
+        '<span class="c-title">' + t.title + '</span>' +
+        '<span class="c-meta">' + t.dur + '</span>' +
+      '</span>' +
+      '<span class="c-go">Слушать</span>';
+    b.addEventListener("click", function(){ select(i, true); });
+    grid.appendChild(b);
+    buttons.push(b);
+  });
+
+  function markActive(i, playing){
+    buttons.forEach(function(b, idx){
+      b.classList.toggle("active", idx === i);
+      b.classList.toggle("is-playing", idx === i && playing);
+      if (idx === i) b.querySelector(".c-go").textContent = playing ? "Играет" : "Пауза";
+      else b.querySelector(".c-go").textContent = "Слушать";
+    });
+  }
+
+  function select(i, autoplay){
+    if (i < 0 || i >= TRACKS.length) return;
+    var t = TRACKS[i];
+    if (i !== current){
+      current = i;
+      audio.src = t.file;
+      audio.load();
+      LS.set("cur", String(i));
+    }
+    player.hidden = false;
+    nowEl.innerHTML = t.title + ' <span>· ' + t.dur + '</span>';
+    prevBtn.disabled = (i === 0);
+    nextBtn.disabled = (i === TRACKS.length - 1);
+    audio.playbackRate = currentRate;
+    markActive(i, false);
+    if (autoplay){
+      audio.play().catch(function(){ /* нужен жест пользователя — просто ждём кнопку play */ });
+    }
+    if (!restoring){
+      player.scrollIntoView({behavior:"smooth", block:"nearest"});
+    }
+  }
+
+  audio.addEventListener("loadedmetadata", function(){
+    var saved = parseFloat(LS.get("pos_" + TRACKS[current].n) || "0");
+    if (saved > 5 && isFinite(audio.duration) && saved < audio.duration - 5) audio.currentTime = saved;
+  });
+  audio.addEventListener("timeupdate", function(){
+    if (current >= 0 && !audio.paused) LS.set("pos_" + TRACKS[current].n, String(Math.floor(audio.currentTime)));
+  });
+  audio.addEventListener("play",  function(){ markActive(current, true); });
+  audio.addEventListener("pause", function(){ markActive(current, false); });
+  audio.addEventListener("ended", function(){
+    LS.set("pos_" + TRACKS[current].n, "0");
+    if (current < TRACKS.length - 1) select(current + 1, true);
+    else markActive(current, false);
+  });
+
+  prevBtn.addEventListener("click", function(){ select(current - 1, true); });
+  nextBtn.addEventListener("click", function(){ select(current + 1, true); });
+
+  // скорость
+  var currentRate = parseFloat(LS.get("rate") || "1") || 1;
+  function applyRate(r){
+    currentRate = r;
+    audio.playbackRate = r;
+    LS.set("rate", String(r));
+    seg.querySelectorAll("button").forEach(function(b){
+      b.setAttribute("aria-pressed", parseFloat(b.dataset.rate) === r ? "true" : "false");
+    });
+  }
+  seg.addEventListener("click", function(e){
+    var b = e.target.closest("button");
+    if (b) applyRate(parseFloat(b.dataset.rate));
+  });
+  applyRate(currentRate);
+
+  // клавиши ← / →  для переключения глав
+  document.addEventListener("keydown", function(e){
+    if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    if (e.key === "ArrowRight" && current > -1 && current < TRACKS.length - 1){ select(current + 1, true); }
+    if (e.key === "ArrowLeft"  && current > 0){ select(current - 1, true); }
+  });
+
+  // восстановить последнюю главу без автозапуска
+  var cur = parseInt(LS.get("cur") || "-1", 10);
+  if (cur >= 0 && cur < TRACKS.length){
+    restoring = true;
+    select(cur, false);
+    restoring = false;
+  }
+
+  // мягкое появление + гарантированный показ
+  var reveals = Array.prototype.slice.call(document.querySelectorAll(".reveal"));
+  function showAll(){ reveals.forEach(function(el){ el.classList.add("in"); }); }
+  if ("IntersectionObserver" in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if (en.isIntersecting){ en.target.classList.add("in"); io.unobserve(en.target); } });
+    }, {rootMargin:"0px 0px -40px 0px"});
+    reveals.forEach(function(el){ io.observe(el); });
+    setTimeout(showAll, 1600);
+  } else { showAll(); }
+})();
+</script>
+</body>
+</html>
